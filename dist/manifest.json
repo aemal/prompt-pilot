@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "Prompt Pilot",
+  "version": "1.0.0",
+  "description": "Enhance your LinkedIn engagement with AI-powered comments",
+  "permissions": [
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://*.linkedin.com/*"
+  ],
+  "content_scripts": [
+    {
+      "js": [
+        "assets/content-Bg7bpCzZ.js"
+      ],
+      "matches": [
+        "https://*.linkedin.com/*"
+      ]
+    }
+  ],
+  "background": {
+    "service_worker": "service-worker-loader.js",
+    "type": "module"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "matches": [
+        "https://*.linkedin.com/*"
+      ],
+      "resources": [
+        "assets/content-Bg7bpCzZ.js"
+      ],
+      "use_dynamic_url": false
+    }
+  ]
+}
