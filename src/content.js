@@ -14,6 +14,97 @@ style.textContent = `
     display: inline-block;
     vertical-align: middle;
   }
+
+  /* Modal Dialog Styles */
+  .prompt-pilot-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .prompt-pilot-modal.active {
+    display: flex;
+  }
+
+  .prompt-pilot-modal-content {
+    background-color: white;
+    padding: 24px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .prompt-pilot-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .prompt-pilot-modal-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.9);
+  }
+
+  .prompt-pilot-modal-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+  }
+
+  .prompt-pilot-post-content {
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 16px;
+    background-color: #f3f2ef;
+    border-radius: 4px;
+    margin-bottom: 16px;
+  }
+
+  .prompt-pilot-textarea {
+    width: 100%;
+    min-height: 150px;
+    padding: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+    resize: vertical;
+    font-family: inherit;
+    font-size: 14px;
+  }
+
+  .prompt-pilot-textarea:focus {
+    outline: none;
+    border-color: #0a66c2;
+  }
+
+  .prompt-pilot-generate-btn {
+    margin-top: 8px;
+    align-self: flex-end;
+    background-color: #0a66c2;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .prompt-pilot-generate-btn:hover {
+    background-color: #004182;
+  }
 `;
 document.head.appendChild(style);
 
@@ -53,10 +144,69 @@ function createPromptPilotButton() {
     </span>
   `;
   button.addEventListener('click', () => {
-    console.log('Prompt Pilot button clicked!');
-    // TODO: Implement the prompt functionality
+    showPromptPilotModal(button);
   });
   return button;
+}
+
+// Function to create the modal dialog
+function createPromptPilotModal() {
+  const modal = document.createElement('div');
+  modal.className = 'prompt-pilot-modal';
+  modal.innerHTML = `
+    <div class="prompt-pilot-modal-content">
+      <div class="prompt-pilot-modal-header">
+        <h2 class="prompt-pilot-modal-title">Create Prompt</h2>
+        <button class="prompt-pilot-modal-close" aria-label="Close">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" fill="rgba(0, 0, 0, 0.6)"/>
+          </svg>
+        </button>
+      </div>
+      <div class="prompt-pilot-post-content"></div>
+      <textarea class="prompt-pilot-textarea" placeholder="Enter your prompt instructions here..."></textarea>
+      <button class="prompt-pilot-generate-btn">Generate</button>
+    </div>
+  `;
+
+  // Add event listeners
+  const closeButton = modal.querySelector('.prompt-pilot-modal-close');
+  closeButton.addEventListener('click', () => {
+    modal.classList.remove('active');
+  });
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.classList.remove('active');
+    }
+  });
+
+  return modal;
+}
+
+// Function to get post content
+function getPostContent(commentButton) {
+  const postContainer = commentButton.closest('.feed-shared-update-v2');
+  if (!postContainer) return '';
+
+  const postContent = postContainer.querySelector('.feed-shared-inline-show-more-text .update-components-text');
+  return postContent ? postContent.textContent.trim() : '';
+}
+
+// Function to show the modal
+function showPromptPilotModal(commentButton) {
+  let modal = document.querySelector('.prompt-pilot-modal');
+  if (!modal) {
+    modal = createPromptPilotModal();
+    document.body.appendChild(modal);
+  }
+
+  const postContent = getPostContent(commentButton);
+  const postContentDiv = modal.querySelector('.prompt-pilot-post-content');
+  postContentDiv.textContent = postContent;
+
+  modal.classList.add('active');
+  modal.querySelector('.prompt-pilot-textarea').focus();
 }
 
 // Function to create the Prompt Pilot comment icon button
@@ -74,8 +224,7 @@ function createPromptPilotCommentButton() {
     </svg>
   `;
   button.addEventListener('click', () => {
-    console.log('Prompt Pilot comment button clicked!');
-    // TODO: Implement the prompt functionality
+    showPromptPilotModal(button);
   });
   return button;
 }
