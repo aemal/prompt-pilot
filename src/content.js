@@ -166,6 +166,7 @@ function createPromptPilotModal() {
       <div class="prompt-pilot-post-content"></div>
       <textarea class="prompt-pilot-textarea" placeholder="Enter your prompt instructions here..."></textarea>
       <button class="prompt-pilot-generate-btn">Generate</button>
+      <div class="prompt-pilot-response" style="display: none; margin-top: 16px; padding: 16px; background-color: #f3f2ef; border-radius: 4px;"></div>
     </div>
   `;
 
@@ -178,6 +179,42 @@ function createPromptPilotModal() {
   modal.addEventListener('click', (e) => {
     if (e.target === modal) {
       modal.classList.remove('active');
+    }
+  });
+
+  // Add generate button click handler
+  const generateBtn = modal.querySelector('.prompt-pilot-generate-btn');
+  generateBtn.addEventListener('click', async () => {
+    const postContent = modal.querySelector('.prompt-pilot-post-content').textContent;
+    const userPrompt = modal.querySelector('.prompt-pilot-textarea').value;
+    const responseDiv = modal.querySelector('.prompt-pilot-response');
+
+    try {
+      generateBtn.disabled = true;
+      generateBtn.textContent = 'Generating...';
+      responseDiv.style.display = 'none';
+
+      const response = await fetch('https://aemal.app.n8n.cloud/webhook-test/85d278cd-64c8-4dca-830e-4964c31bdadc', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          post: postContent,
+          userPrompt: userPrompt
+        })
+      });
+
+      const data = await response.json();
+      responseDiv.textContent = data.output;
+      responseDiv.style.display = 'block';
+    } catch (error) {
+      responseDiv.textContent = 'Error: Failed to generate response. Please try again.';
+      responseDiv.style.display = 'block';
+      console.error('Error:', error);
+    } finally {
+      generateBtn.disabled = false;
+      generateBtn.textContent = 'Generate';
     }
   });
 

@@ -71,14 +71,47 @@ When a user clicks the "Generate" button in your UI, send a POST request to a we
   }
   ```
 
+## 5. Response Dialog Implementation
+- Display the response in a small dialog/modal component
+- Add two buttons next to the response:
+  1. **Copy Button**: Allows users to copy the response text to clipboard
+  2. **Insert Button**: Currently just logs to console (placeholder for future implementation)
+- Example implementation:
+  ```jsx
+  function ResponseDialog({ response, onClose }) {
+    const handleCopy = () => {
+      navigator.clipboard.writeText(response);
+      // Optional: Show a "Copied!" toast notification
+    };
+
+    const handleInsert = () => {
+      console.log('Insert button clicked');
+      // Future implementation will go here
+    };
+
+    return (
+      <div className="response-dialog">
+        <div className="response-content">
+          <p>{response}</p>
+          <div className="button-group">
+            <button onClick={handleCopy}>Copy</button>
+            <button onClick={handleInsert}>Insert</button>
+          </div>
+        </div>
+        <button onClick={onClose}>Close</button>
+      </div>
+    );
+  }
+  ```
+
 ---
 
-## 5. Error Handling
+## 6. Error Handling
 - Make sure to handle errors gracefully (e.g., show an error message if the request fails).
 
 ---
 
-## 6. Summary
+## 7. Summary
 - User clicks "Generate" → HTTP POST sent to webhook → Response received → Output shown to user.
 
 ---
