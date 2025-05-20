@@ -130,6 +130,63 @@ styleComment.textContent = `
 `;
 document.head.appendChild(styleComment);
 
+// Add this CSS after the previous style definitions
+const style3Col = document.createElement('style');
+style3Col.textContent = `
+  .prompt-pilot-modal-3col {
+    padding: 24px 24px 24px 24px;
+    max-width: 900px;
+    min-width: 600px;
+  }
+  .prompt-pilot-modal-3col-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 24px;
+    width: 100%;
+    align-items: flex-start;
+  }
+  .prompt-pilot-modal-col {
+    background: #fafbfc;
+    border-radius: 6px;
+    padding: 16px;
+    min-height: 180px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .prompt-pilot-modal-col1 {
+    font-size: 14px;
+    color: #444;
+    background: #f3f2ef;
+    min-width: 0;
+    word-break: break-word;
+  }
+  .prompt-pilot-modal-col2 {
+    background: #fff;
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+  .prompt-pilot-modal-col3 {
+    background: #f3f2ef;
+    min-width: 0;
+    word-break: break-word;
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+  @media (max-width: 900px) {
+    .prompt-pilot-modal-3col-grid {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    .prompt-pilot-modal-3col {
+      min-width: 0;
+      max-width: 98vw;
+    }
+  }
+`;
+document.head.appendChild(style3Col);
+
 // Function to create the Prompt Pilot button (icon only)
 function createPromptPilotButton() {
   const button = document.createElement('button');
@@ -154,7 +211,7 @@ function createPromptPilotModal() {
   const modal = document.createElement('div');
   modal.className = 'prompt-pilot-modal';
   modal.innerHTML = `
-    <div class="prompt-pilot-modal-content">
+    <div class="prompt-pilot-modal-content prompt-pilot-modal-3col">
       <div class="prompt-pilot-modal-header">
         <h2 class="prompt-pilot-modal-title">Create Prompt</h2>
         <button class="prompt-pilot-modal-close" aria-label="Close">
@@ -163,10 +220,18 @@ function createPromptPilotModal() {
           </svg>
         </button>
       </div>
-      <div class="prompt-pilot-post-content"></div>
-      <textarea class="prompt-pilot-textarea" placeholder="Enter your prompt instructions here..."></textarea>
-      <button class="prompt-pilot-generate-btn">Generate</button>
-      <div class="prompt-pilot-response" style="display: none; margin-top: 16px; padding: 16px; background-color: #f3f2ef; border-radius: 4px;"></div>
+      <div class="prompt-pilot-modal-3col-grid">
+        <div class="prompt-pilot-modal-col prompt-pilot-modal-col1">
+          <div class="prompt-pilot-post-content"></div>
+        </div>
+        <div class="prompt-pilot-modal-col prompt-pilot-modal-col2">
+          <textarea class="prompt-pilot-textarea" placeholder="Enter your prompt instructions here..."></textarea>
+          <button class="prompt-pilot-generate-btn">Generate</button>
+        </div>
+        <div class="prompt-pilot-modal-col prompt-pilot-modal-col3">
+          <div class="prompt-pilot-response" style="display: none; margin-top: 0; padding: 16px; background-color: #f3f2ef; border-radius: 4px;"></div>
+        </div>
+      </div>
     </div>
   `;
 
@@ -188,30 +253,64 @@ function createPromptPilotModal() {
     const postContent = modal.querySelector('.prompt-pilot-post-content').textContent;
     const userPrompt = modal.querySelector('.prompt-pilot-textarea').value;
     const responseDiv = modal.querySelector('.prompt-pilot-response');
+    const userName = modal.getAttribute('data-pp-username') || '';
 
     try {
       generateBtn.disabled = true;
       generateBtn.textContent = 'Generating...';
       responseDiv.style.display = 'none';
 
+      const payload = {
+        post: postContent,
+        userPrompt: userPrompt,
+        userName: userName
+      };
+
       const response = await fetch('https://aemal.app.n8n.cloud/webhook-test/85d278cd-64c8-4dca-830e-4964c31bdadc', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          post: postContent,
-          userPrompt: userPrompt
-        })
+        body: JSON.stringify(payload)
       });
 
       const data = await response.json();
-      responseDiv.textContent = data.output;
+      
+      // Create response dialog
+      responseDiv.innerHTML = `
+        <div class="response-dialog">
+          <div class="response-content">
+            <p>${data.output || data.response || data}</p>
+            <div class="button-group" style="display: flex; gap: 8px; margin-top: 16px;">
+              <button class="prompt-pilot-copy-btn" style="padding: 8px 16px; background: #0a66c2; color: white; border: none; border-radius: 4px; cursor: pointer;">Copy</button>
+              <button class="prompt-pilot-insert-btn" style="padding: 8px 16px; background: #0a66c2; color: white; border: none; border-radius: 4px; cursor: pointer;">Insert</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Add event listeners for the new buttons
+      const copyBtn = responseDiv.querySelector('.prompt-pilot-copy-btn');
+      const insertBtn = responseDiv.querySelector('.prompt-pilot-insert-btn');
+
+      copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(data.output || data.response || data);
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => {
+          copyBtn.textContent = 'Copy';
+        }, 2000);
+      });
+
+      insertBtn.addEventListener('click', () => {
+        console.log('Insert button clicked');
+        // Future implementation will go here
+      });
+
       responseDiv.style.display = 'block';
     } catch (error) {
-      responseDiv.textContent = 'Error: Failed to generate response. Please try again.';
-      responseDiv.style.display = 'block';
       console.error('Error:', error);
+      responseDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+      responseDiv.style.display = 'block';
     } finally {
       generateBtn.disabled = false;
       generateBtn.textContent = 'Generate';
@@ -221,13 +320,26 @@ function createPromptPilotModal() {
   return modal;
 }
 
-// Function to get post content
-function getPostContent(commentButton) {
+// Function to get post content and commenter name
+function getPostContentAndName(commentButton) {
   const postContainer = commentButton.closest('.feed-shared-update-v2');
-  if (!postContainer) return '';
+  if (!postContainer) return { postContent: '', userName: '' };
 
+  // Extract post content
   const postContent = postContainer.querySelector('.feed-shared-inline-show-more-text .update-components-text');
-  return postContent ? postContent.textContent.trim() : '';
+  const postText = postContent ? postContent.textContent.trim() : '';
+
+  // Extract commenter name
+  let userName = '';
+  const actorContainer = postContainer.querySelector('.update-components-actor__container');
+  if (actorContainer) {
+    const nameSpan = actorContainer.querySelector('.update-components-actor__title span[aria-hidden="true"]');
+    if (nameSpan) {
+      userName = nameSpan.textContent.trim();
+    }
+  }
+
+  return { postContent: postText, userName };
 }
 
 // Function to show the modal
@@ -238,9 +350,12 @@ function showPromptPilotModal(commentButton) {
     document.body.appendChild(modal);
   }
 
-  const postContent = getPostContent(commentButton);
+  const { postContent, userName } = getPostContentAndName(commentButton);
   const postContentDiv = modal.querySelector('.prompt-pilot-post-content');
-  postContentDiv.textContent = postContent;
+  postContentDiv.innerHTML = `<strong>${userName ? userName : ''}</strong><br>${postContent}`;
+
+  // Store userName for later use in payload
+  modal.setAttribute('data-pp-username', userName);
 
   modal.classList.add('active');
   modal.querySelector('.prompt-pilot-textarea').focus();
